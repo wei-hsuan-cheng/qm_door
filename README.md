@@ -21,8 +21,8 @@ The controller was adapted and tested for different Search and Rescue (SAR) envi
 
 The source code is hosted on GitHub: [danisotelo/qm_door](https://github.com/danisotelo/qm_door/issues).
 
-```
-git clone https://github.com/danisotelo/qm_door.git
+```bash
+git clone https://github.com/wei-hsuan-cheng/qm_door.git
 ```
 
 ### OCS2
@@ -31,7 +31,7 @@ OCS2 is a huge monorepo, it is not necessary to compile it completely. Only `ocs
 
 1. You are supposed to clone OCS2, [pinocchio](https://github.com/stack-of-tasks/pinocchio), and [hpp-fcl](https://github.com/humanoid-path-planner/hpp-fcl) repositories, as described in the documentation of OCS2.
 
-   ```
+   ```bash
    # Clone OCS2
    git clone https://github.com/leggedrobotics/ocs2.git
    # Clone pinocchio
@@ -46,18 +46,44 @@ OCS2 is a huge monorepo, it is not necessary to compile it completely. Only `ocs
 
 2. Compile the `ocs2_legged_robot_ros` package with [catkin_tools](https://catkin-tools.readthedocs.io/en/latest/) instead of `catkin_make`. It will take you about ten minutes.
 
-   ```
+   ```bash
    catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo
-   catkin build ocs2_legged_robot_ros ocs2_self_collision_visualization
+   catkin build ocs2_legged_robot_ros ocs2_self_collision_visualization -p 1 -j 2
    ```
 
 ### Build
 
 Build the source code of `qm_door` by:
 
+```bash
+catkin build qm_door -p 1 -j 2
 ```
-catkin build qm_door
+
+### Docker development (ROS 1 noetic)
+Mount local `qm_door` package into container to dev your own package!
+```bash
+# Clone this repo
+mkdir -p ${HOME}/src
+cd ${HOME}/src
+git clone https://github.com/wei-hsuan-cheng/qm_door.git
+
+# Build docker image
+cd ~/src/qm_door
+docker build -f ./Dockerfile \
+   --build-arg TARGETARCH=amd64 \
+   -t ocs2/qm_door .
+
+# Compose and start container
+docker compose -f ./compose.yaml up -d
+docker start qm_door
+docker exec -it qm_door bash
 ```
+
+<!-- # Then replace the /qm_door code by soft link!
+cd /usr/src/qm_door_ws/src && rm -rf /qm_door
+ln -s <your_path>/qm_door # linked to the local one
+cd /usr/src/qm_door_ws
+catkin build qm_door && . devel/setup.bash -->
 
 ## Quick Start
 
@@ -65,36 +91,36 @@ catkin build qm_door
 
     - Combined system:
 
-      ```
+      ```bash
       roslaunch qm_gazebo stairs_world.launch
       ```
 
     - Separated system:
 
-      ```
+      ```bash
       roslaunch qm_gazebo stairs_world_mpc.launch
       ```
 
 2. Then, in a second terminal load the NMPC controller. The controller to load will depend on the selected control strategy. For controlling the combined system run:
-    ```      
+    ```bash      
     roslaunch qm_controllers load_controller.launch
     ```
     In case it is desired to control the robots as separated systems run:
-    ```      
+    ```bash      
     roslaunch qm_controllers load_controller_mpc.launch
     ```
 
     Next, you should click on the **play button** in the opened Gazebo window to initialize the simulation. Once the controller has been loaded, from the same terminal you can open the `rqt_controller_manager` to load and activate the loaded controller:
-    ```      
+    ```bash      
     rosrun rqt_controller_manager rqt_controller_manager
     ```
 
 3. The launch of the gazebo simulation will have opened the corresponding RViz visualization. The robot can be controlled with velocity commands, but if you want to control it with the end-effector position from RViz you should run in a third terminal:
-    ```      
+    ```bash      
     roslaunch qm_controllers load_qm_target.launch
     ```
 4. While controlling the robot with the end-effector position, if you want to change the gait pattern (eleven different schedules are available, "trot" is used in the example), simply run in a separate terminal:
-    ```      
+    ```bash      
     rostopic pub /gait_command_topic std_msgs/String "trot"
     ```
 

@@ -1,0 +1,19 @@
+services:
+  qm_door: # service name, can be set to the same as the container name.
+    image: ocs2/qm_door
+    container_name: qm_door
+    privileged: true
+    network_mode: host
+    security_opt:
+      - seccomp=unconfined
+    shm_size: 512m
+    volumes:
+      - /dev/:/dev/:rw
+      - ${HOME}/src/:/root/src/:rw
+      - /tmp/.X11-unix/:/tmp/.X11-unix:rw
+      - ${HOME}/.xaut/:/root/.xaut/:rw
+    environment:
+      DISPLAY: ${DISPLAY}
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
